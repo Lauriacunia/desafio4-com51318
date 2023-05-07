@@ -2,14 +2,14 @@ const express = require("express");
 const app = express();
 const PORT = 8080 || process.env.PORT;
 const productRoutes = require("./routes/productRoutes.js");
-//const cartRoutes = require("./routes/cartRoutes.js");
+const cartRoutes = require("./routes/cartRoutes.js");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.use("/api/products", productRoutes);
-//app.use("/api/cart", cartRoutes);
+app.use("/api/carts", cartRoutes);
 
 try {
   app.listen(PORT, () =>

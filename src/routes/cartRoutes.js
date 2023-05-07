@@ -1,44 +1,76 @@
 const { Router } = require("express");
 const router = Router();
-const ProductManager = require("./../productManager.js");
-const {
-  createFile,
-  productsToSave,
-  validateNumber,
-} = require("./../utils/helpers.js");
-const path = "./products.txt";
-createFile(path);
-const myProductManager = new ProductManager(path);
+const CartManager = require("../cartManager.js");
+const { validateNumber } = require("./../utils/helpers.js");
+const path = "./src/db/carts.json";
+const myCartsManager = new CartManager(path);
 
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
+  /**Crea un carrito vacío de productos */
   try {
-    const products = await myProductManager.getProducts();
-    const limit = req.query.limit;
-    const isValidLimit = validateNumber(limit);
-    products
-      ? isValidLimit
-        ? res.json(products.slice(0, limit))
-        : res.json(products)
-      : res.json({ error: "Sorry, no products found" });
+    const newCart = req.body;
+    const cartCreated = await myCartsManager.addCart(newCart);
+    cartCreated
+      ? res.status(201).json({
+          status: "success",
+          payload: cartCreated,
+        })
+      : res.json({
+          status: "error",
+        });
   } catch (err) {
-    console.log("getProducts", err);
+    res.status(err.status || 500).json({
+      status: "error",
+      payload: err.message,
+    });
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/", async (req, res) => {
+  /**Devuelve todos los carritos */
   try {
-    const id = req.params.id;
-    const isValidId = validateNumber(id);
-    if (!isValidId) {
-      res.json({ error: "Sorry, invalid id" });
-      return;
-    }
-    const product = await myProductManager.getProductById(req.params.id);
-    product
-      ? res.json(product)
-      : res.json({ error: "Sorry, no product found by id: " + req.params.id });
+    const allCarts = await myCartsManager.read();
+    allCarts
+      ? res.status(200).json({
+          status: "success",
+          payload: allCarts,
+        })
+      : res.status(200).json({
+          status: "success",
+          payload: [],
+        });
   } catch (err) {
-    console.log("getProductById", err);
+    res.status(err.status || 500).json({
+      status: "error",
+      payload: err.message,
+    });
+  }
+});
+
+router.put("/:idCart/products/:idProduct", async (req, res) => {
+  /**Agrega un producto al carrito */
+  try {
+    const idCart = req.params.idCart;
+    const idProduct = req.params.idProduct;
+    const cartUpdated = await myCartsManager.addProductToCart(
+      idCart,
+      idProduct
+    );
+    cartUpdated
+      ? res.status(200).json({
+          status: "success",
+          payload: cartUpdated,
+        })
+      : res.status(404).json({
+          status: "error",
+          message: "Sorry, could not add product to cart",
+          payload: {},
+        });
+  } catch (err) {
+    res.status(err.status || 500).json({
+      status: "error",
+      payload: err.message,
+    });
   }
 });
 

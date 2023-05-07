@@ -5,10 +5,6 @@ class ProductManager {
     this.path = path;
   }
 
-  async loadInitialProducts(products) {
-    await this.write(products);
-  }
-
   async getProducts() {
     return await this.read(this.file);
   }
