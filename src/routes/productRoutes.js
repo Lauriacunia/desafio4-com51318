@@ -76,14 +76,9 @@ router.post("/", validateRequest, validateCodeNotRepeated, async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", validateRequest, validateNumberParams, async (req, res) => {
   try {
     const id = req.params.id;
-    const isValidId = validateNumber(id);
-    if (!isValidId) {
-      res.json({ error: "Sorry, invalid id" });
-      return;
-    }
     const newProduct = req.body;
     const productUpdated = await myProductManager.updateProduct(id, newProduct);
     res.status(200).json({

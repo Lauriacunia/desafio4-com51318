@@ -23,6 +23,7 @@ class ProductManager {
     let allProductsArray = await this.read(this.file);
     let nextId = await this.getNextId(allProductsArray);
     newProduct.id = nextId;
+    /**A todos los productos el backend le agrega status=true por default */
     newProduct.status = true;
     allProductsArray.push(newProduct);
     await this.write(allProductsArray);
@@ -36,10 +37,15 @@ class ProductManager {
       (product) => product.id == id
     );
     if (!productToUpdate) {
-      //TODO: mejorar response
       console.log("producto no encontrado", productToUpdate);
-      return { error: "Sorry, no product found by id: " + id };
+      return { 
+        status: "error",
+        message: "Sorry, no product found by id: " + id,
+        payload: {},
+      };
     }
+    // actualizo los campos que se repiten
+    newProduct = this.updateProductFields(productToUpdate, newProduct);
     const index = allProductsArray.indexOf(productToUpdate);
     allProductsArray[index] = newProduct;
     await this.write(allProductsArray);
@@ -48,7 +54,7 @@ class ProductManager {
 
   updateProductFields(productToUpdate, newProduct) {
     /** 🗨 Los campos que se repiten los actualiza,
-     * los que no (como el id) los deja igual */
+     * los que no (como el id o status) los deja igual */
     const updatedProduct = {
       ...productToUpdate,
       ...newProduct,
