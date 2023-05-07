@@ -1,9 +1,14 @@
 const { Router } = require("express");
 const router = Router();
 const ProductManager = require("./../productManager.js");
-const { validateNumber } = require("./../utils/helpers.js");
 const path = "src/db/products.json";
 const myProductManager = new ProductManager(path);
+const validateNumber = require("./../utils/helpers.js").validateNumber;
+const {
+  validateRequest,
+  validateNumberParams,
+  validateCodeNotRepeated,
+} = require("./../middleware/validators.js");
 
 router.get("/", async (req, res) => {
   try {
@@ -12,32 +17,46 @@ router.get("/", async (req, res) => {
     const isValidLimit = validateNumber(limit);
     products
       ? isValidLimit
-        ? res.json(products.slice(0, limit))
-        : res.json(products)
-      : res.json({ error: "Sorry, no products found" });
+        ? res.status(200).json({
+            status: "success",
+            payload: products.slice(0, limit),
+          })
+        : res.status(200).json({
+            status: "success",
+            payload: products,
+          })
+      : res.status(200).json({ status: "success", payload: [] });
   } catch (err) {
-    console.log("getProducts", err);
+    res.status(err.status || 500).json({
+      status: "error",
+      payload: err.message,
+    });
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", validateNumberParams, async (req, res) => {
   try {
     const id = req.params.id;
-    const isValidId = validateNumber(id);
-    if (!isValidId) {
-      res.json({ error: "Sorry, invalid id" });
-      return;
-    }
-    const product = await myProductManager.getProductById(req.params.id);
+    const product = await myProductManager.getProductById(id);
     product
-      ? res.json(product)
-      : res.json({ error: "Sorry, no product found by id: " + req.params.id });
+      ? res.status(200).json({
+          status: "success",
+          payload: product,
+        })
+      : res.status(404).json({
+          status: "error",
+          message: "Sorry, no product found by id: " + id,
+          payload: {},
+        });
   } catch (err) {
-    console.log("getProductById", err);
+    res.status(err.status || 500).json({
+      status: "error",
+      payload: err.message,
+    });
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", validateRequest, validateCodeNotRepeated, async (req, res) => {
   try {
     const newProduct = req.body;
     const productCreated = await myProductManager.addProduct(newProduct);
