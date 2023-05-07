@@ -47,6 +47,30 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/:idCart/products", async (req, res) => {
+  /**Devuelve los productos de un carrito por id */
+  try {
+    const idCart = req.params.idCart;
+    const allCarts = await myCartsManager.read();
+    const cart = allCarts.find((cart) => cart.id == idCart);
+    cart
+      ? res.status(200).json({
+          status: "success",
+          payload: cart.products,
+        })
+      : res.status(404).json({
+          status: "error",
+          message: "Sorry, no cart found by id: " + idCart,
+          payload: {},
+        });
+  } catch (err) {
+    res.status(err.status || 500).json({
+      status: "error",
+      payload: err.message,
+    });
+  }
+});
+
 router.put("/:idCart/products/:idProduct", async (req, res) => {
   /**Agrega un producto al carrito */
   try {
