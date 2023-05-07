@@ -38,18 +38,35 @@ class ProductManager {
     );
     if (!productToUpdate) {
       console.log("producto no encontrado", productToUpdate);
-      return { 
+      return {
         status: "error",
         message: "Sorry, no product found by id: " + id,
         payload: {},
       };
     }
-    // actualizo los campos que se repiten
     newProduct = this.updateProductFields(productToUpdate, newProduct);
     const index = allProductsArray.indexOf(productToUpdate);
     allProductsArray[index] = newProduct;
     await this.write(allProductsArray);
     return newProduct;
+  }
+
+  async deleteProduct(id) {
+    let allProductsArray = await this.read(this.file);
+    const productToDelete = allProductsArray.find(
+      (product) => product.id == id
+    );
+    if (!productToDelete) {
+      return {
+        status: "error",
+        message: "Sorry, no product found by id: " + id,
+        payload: {},
+      };
+    }
+    const index = allProductsArray.indexOf(productToDelete);
+    allProductsArray.splice(index, 1);
+    await this.write(allProductsArray);
+    return productToDelete;
   }
 
   updateProductFields(productToUpdate, newProduct) {

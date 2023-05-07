@@ -93,4 +93,30 @@ router.put("/:id", validateRequest, validateNumberParams, async (req, res) => {
   }
 });
 
+router.delete("/:id", validateNumberParams, async (req, res) => {
+  try {
+    console.log("delete");
+    const id = req.params.id;
+    const product = await myProductManager.getProductById(id);
+    if (!product) {
+      res.status(404).json({
+        status: "error",
+        message: "Sorry, no product found by id: " + id,
+        payload: {},
+      });
+      return;
+    }
+    const productDeleted = await myProductManager.deleteProduct(id);
+    res.status(200).json({
+      status: "success",
+      payload: productDeleted,
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({
+      status: "error",
+      payload: err.message,
+    });
+  }
+});
+
 module.exports = router;
